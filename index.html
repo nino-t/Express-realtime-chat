@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Express Realtime Chat</title>
+
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>	
+	<script src="/socket.io/socket.io.js"></script>
+
+	<style>
+		#message-area .alert{
+			margin: 10px 25px;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<br>
+		<div class="row">
+			<div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+				<div class="jumbotron">
+					<div class="container">
+						<h1>Realtime chat</h1>
+						<p>let's talk...!</p>
+					</div>
+				</div>
+
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<h3 class="panel-title">Chat with me</h3>
+					</div>
+					<div class="panel-body">
+						<form onsubmit="$('#submit').trigger('click')">
+							<div class="input-group mb-3">
+							  <div class="input-group-prepend">
+							    <span class="input-group-text">@</span>
+							  </div>
+							  <input name="name" id="name" type="text" class="form-control" placeholder="Username...">
+							</div>
+
+							<div class="input-group">
+							  <div class="input-group-prepend">
+							    <span class="input-group-text">Message</span>
+							  </div>
+							  <textarea name="message" id="message" class="form-control"></textarea>
+							</div>				
+
+							<br>
+							<button type="button" id="submit" class="btn btn-primary">Submit</button>
+						</form>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+				<div class="panel panel-default">
+					<div class="panel-heading" style="border: 3px solid #ddd; padding: 8px;">
+						<h3 class="panel-title">Chat Message</h3>
+					</div>
+					<div class="panel-body" id="message-area" style="height: 500px; overflow-y: scroll; border: 2px solid #ddd;">
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		var socket = io();
+		jQuery(document).ready(function($) {
+			getMessage();
+
+			$('#submit').on('click', function(event) {
+				event.preventDefault();
+				var message = {
+					name: $('#name').val(),
+					message: $('#message').val()
+				}				
+
+				postMessage(message);
+				$('#name').val('');
+				$('#message').val('');
+
+			});
+		});
+
+		socket.on('message', addMessage);
+
+		function addMessage(message) {
+			var html = '';
+			html += '<div class="alert alert-info">';
+				html += '<strong>'+message.name+'</strong>';
+				html += '<p>'+message.message+'</p>';
+			html += '</div>';
+
+			$('#message-area').append(html);
+		}
+
+		function getMessage() {
+			jQuery.get('http://localhost:3000/message', function(data, textStatus, xhr) {
+				data.map(function(message, index) {
+					addMessage(message)
+				})
+			});
+		}
+
+		function postMessage(message) {
+			jQuery.post('http://localhost:3000/message', message, function(data, textStatus, xhr) {
+				console.log('Data posted...');
+			});
+		}
+	</script>
+</body>
+</html>
