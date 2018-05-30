@@ -1,5 +1,5 @@
 ## Express realtime chat
-Realtime chat node, express, mongodb and socket.io
+Realtime chat with node, express, mongodb and socket.io
 <br>
 ![alt text](https://github.com/nino-t/Express-realtime-chat/blob/master/demo/demo.gif)
 
