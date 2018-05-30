@@ -10,6 +10,8 @@ app.use(express.static(__dirname))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 
+mongoose.Promise = Promise
+
 const DB_URI = 'mongodb://root:root@ds139690.mlab.com:39690/chat_db'
 
 // Model
@@ -24,16 +26,24 @@ app.get('/message', (req, res) => {
 	})	
 })
 
-app.post('/message', (req, res) => {
-	var message = new Message(req.body);
+app.post('/message', async(req, res) => {
+	try {
+		var message = new Message(req.body)
+		var savedMessage = await message.save()
 
-	message.save((err) => {
-		if (err)
-			sendStatus(500)
+		var censored = await Message.findOne({ message: 'kasar' })
+		if (censored)
+			await Message.findOne({ message: 'kasar' })
+		else
+			io.emit('message', req.body)
 
-		io.emit('message', req.body)
-		res.sendStatus(200)		
-	})
+		res.sendStatus(200)
+	} catch(e) {
+		sendStatus(500)
+		return console.log(err)
+	} finally {
+		console.log('Process is finish')
+	}
 })
 
 io.on('connection', function(socket){
@@ -41,7 +51,7 @@ io.on('connection', function(socket){
 })
 
 mongoose.connect(DB_URI, (err) => {
-	console.log('a user connected', err)
+	console.log('mongoose is connected', err)
 })
 
 const server = http.listen(3000, () => {
