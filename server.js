@@ -1,5 +1,6 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+const mongoose = require('mongoose')
 
 const app = require('express')()
 const http = require('http').Server(app)
@@ -9,25 +10,38 @@ app.use(express.static(__dirname))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 
-var message = [
-	{
-		name: 'Nino',
-		message: 'Hello World'
-	}
-]
+const DB_URI = 'mongodb://root:root@ds139690.mlab.com:39690/chat_db'
+
+// Model
+var Message = mongoose.model('Message', {
+	name: String,
+	message: String
+})
 
 app.get('/message', (req, res) => {
-	res.send(message)
+	Message.find({}, (err, messages) => {
+		res.send(messages)
+	})	
 })
 
 app.post('/message', (req, res) => {
-	message.push(req.body)
-	io.emit('message', req.body)
-	res.sendStatus(200)
+	var message = new Message(req.body);
+
+	message.save((err) => {
+		if (err)
+			sendStatus(500)
+
+		io.emit('message', req.body)
+		res.sendStatus(200)		
+	})
 })
 
 io.on('connection', function(socket){
 	console.log('a user connected');
+})
+
+mongoose.connect(DB_URI, (err) => {
+	console.log('a user connected', err)
 })
 
 const server = http.listen(3000, () => {
