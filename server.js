@@ -33,7 +33,7 @@ app.post('/message', async(req, res) => {
 
 		var censored = await Message.findOne({ message: 'kasar' })
 		if (censored)
-			await Message.findOne({ message: 'kasar' })
+			await Message.remove({ _id: censored.id })
 		else
 			io.emit('message', req.body)
 
